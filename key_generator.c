@@ -2,7 +2,8 @@
 #include <gmp.h>
 #include <time.h>
 #include <stdlib.h>
-#include <key.h>
+
+#include "key.h"
 
 void eea(mpz_t gcd, mpz_t inv, mpz_t e, mpz_t r0){ // r1 < r2
     mpz_t r1, ri, // r2 = r_i-2, r1 = r_i-1, ri = r_i, r0
@@ -113,13 +114,13 @@ void key_generator(int nbits, int base)
             mpz_urandomm(kpub.exponent, state, phi);  // gera de 0 a phi-1...
         }while(mpz_cmp_ui(kpub.exponent, 1) <= 0);
         eea(gcd, kpriv.exponent, kpub.exponent, phi);
-    } while(mpz_cmp_ui(gcd, 1) != 0);
+    } while(mpz_cmp_ui(gcd, 1) != 0 || mpz_cmp(kpriv.exponent, kpub.exponent) == 0);
 
     if(base == 16){
-        gmp_printf("16\n%Zx\n%Zx\n%Zx\n%Zx\n%Zx\n", kpub.mod, kpub.exponent, kpriv.exponent, p, q);
+        gmp_printf("Base: 16\nMódulo:\n%Zx\nExpoente Público:\n%Zx\nExpoente Privado:\n%Zx\nPrimo p:\n%Zx\nPrimo q:\n%Zx\n", kpub.mod, kpub.exponent, kpriv.exponent, p, q);
     }
     else {
-        gmp_printf("10\n%Zd\n%Zd\n%Zd\n%Zd\n%Zd\n", kpub.mod, kpub.exponent, kpriv.exponent, p, q);
+        gmp_printf("Base: 10\nMódulo:\n%Zd\nExpoente Público:\n%Zd\nExpoente Privado:\n%Zd\nPrimo p:\n%Zd\nPrimo q:\n%Zd\n", kpub.mod, kpub.exponent, kpriv.exponent, p, q);
     }
 
     mpz_clear(p);
@@ -137,7 +138,7 @@ int main(int argc, char const *argv[])
     printf("Número de bits da chave (512, 1024, 2048): ");
     scanf("%d", &nbits);
 
-    printf("Base de representação da saída: ");
+    printf("Base: ");
     scanf("%d", &base);
 
     key_generator(nbits, base);

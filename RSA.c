@@ -3,7 +3,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#include <key.h>
+#include "key.h"
 
 void sm(T_key *key, mpz_t base, mpz_t result) 
 {
@@ -33,8 +33,6 @@ void sm(T_key *key, mpz_t base, mpz_t result)
         mpz_fdiv_q_2exp(percorre, percorre, 1);
     }
 
-    gmp_printf("10\n%Zd");
-
     mpz_clear(temp_AND);
     mpz_clear(percorre); 
 }
@@ -49,27 +47,33 @@ int main(int argc, char const *argv[])
     mpz_init(cypher);
 
     int base;
-    printf("Base de representação da saída: ");
+    printf("Base: ");
     scanf("%d", &base);
 
     if(base == 16){
+        printf("Módulo: ");
         gmp_scanf("%Zx", key.mod);
+        printf("Expoente: ");
         gmp_scanf("%Zx", key.exponent);
+        printf("Mensagem: ");
         gmp_scanf("%Zx", plain);
     }
     else {
+        printf("Módulo: ");
         gmp_scanf("%Zd", key.mod);
+        printf("Expoente: ");
         gmp_scanf("%Zd", key.exponent);
+        printf("Mensagem: ");
         gmp_scanf("%Zd", plain);
     }
 
     sm(&key, plain, cypher);
 
     if(base == 16){
-        gmp_printf("base:\n16\ncypher:\n%Zx\n\n", cypher);
+        gmp_printf("Base:\n16\nMensagem:\n%Zx\n\n", cypher);
     }
     else {
-        gmp_printf("base:\n10\ncypher:\n%Zd\n\n", cypher);
+        gmp_printf("Base:\n10\nMensagem:\n%Zd\n\n", cypher);
     }
 
     mpz_clear(plain);

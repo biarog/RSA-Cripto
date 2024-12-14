@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <gmp.h>
-#include <key.h>
+
+#include "key.h"
 
 void key_init(T_key *key){
     mpz_init(key->mod);
