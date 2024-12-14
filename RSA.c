@@ -87,7 +87,7 @@ void prime_generator(mpz_t number, int nbits) {
     gmp_randclear(state);
 }
 
-int key_generator(int nbits, T_key kpub, T_key kpriv)
+int key_generator(int nbits, T_key *kpub, T_key *kpriv)
 {
     // 1. ESCOLHER PRIMOS GRANDES p, q
     mpz_t p, q;
@@ -98,8 +98,8 @@ int key_generator(int nbits, T_key kpub, T_key kpriv)
     prime_generator(q, nbits/2);
 
     // 2. CALCULAR n
-    mpz_mul(kpriv.mod, p, q);
-    mpz_set(kpub.mod, kpriv.mod);
+    mpz_mul(kpriv->mod, p, q);
+    mpz_set(kpub->mod, kpriv->mod);
 
     // 3. CALCULAR phi(n) = (p-1)*(q-1) 
     mpz_t phi;
@@ -107,6 +107,7 @@ int key_generator(int nbits, T_key kpub, T_key kpriv)
     mpz_sub_ui(p, p, 1);
     mpz_sub_ui(q, q, 1);
     mpz_mul(phi, p, q);
+
     mpz_clear(p);
     mpz_clear(q);
 
@@ -120,9 +121,9 @@ int key_generator(int nbits, T_key kpub, T_key kpriv)
 
     do {
         do {
-            mpz_urandomm(kpub.exponent, state, phi);  // gera de 0 a phi-1...
-        }while(mpz_cmp_ui(kpub.exponent, 1) <= 0);
-        eea(gcd, kpriv.exponent, kpub.exponent, phi);
+            mpz_urandomm(kpub->exponent, state, phi);  // gera de 0 a phi-1...
+        }while(mpz_cmp_ui(kpub->exponent, 1) <= 0);
+        eea(gcd, kpriv->exponent, kpub->exponent, phi);
     } while(mpz_cmp_ui(gcd, 1) != 0);
 
     mpz_clear(gcd);
@@ -140,7 +141,7 @@ int main(int argc, char const *argv[])
     key_init(kpub);
     key_init(kpriv);
 
-    key_generator(512, kpub, kpriv);
+    key_generator(512, &kpub, &kpriv);
 
     key_print(kpub);
     key_print(kpriv);
