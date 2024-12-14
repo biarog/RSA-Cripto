@@ -3,12 +3,13 @@
 #include <time.h>
 #include <stdlib.h>
 
-void eea(mpz_t gcd, mpz_t inv, mpz_t r1, mpz_t r0){ // r1 < r2
-    mpz_t r2, ri, // r2 = r_i-2, r1 = r_i-1, ri = r_i, r0
+void eea(mpz_t gcd, mpz_t inv, mpz_t e, mpz_t r0){ // r1 < r2
+    mpz_t r2, r1, ri, // r2 = r_i-2, r1 = r_i-1, ri = r_i, r0
         q1, // q_i-1
-        t2 = 0, t1 = 1, t; // t2 = t_i-2, t1 = t_i-1, t = t_i
+        t2, t1, t; // t2 = t_i-2, t1 = t_i-1, t = t_i
 
     mpz_init(r2);
+    mpz_init(r1);
     mpz_init(ri);
     mpz_init(q1);
     mpz_init(t2);
@@ -18,6 +19,7 @@ void eea(mpz_t gcd, mpz_t inv, mpz_t r1, mpz_t r0){ // r1 < r2
     mpz_set_ui(t2, 0);
     mpz_set_ui(t1, 1);
 
+    mpz_set(r1, e);
     mpz_set(r2, r0);
 
     // Variaveis exclusivas para as contas do eea
@@ -27,16 +29,21 @@ void eea(mpz_t gcd, mpz_t inv, mpz_t r1, mpz_t r0){ // r1 < r2
 
     do
     {
-        mpz_mod(ri, r2, r1);            // ri = r2 % r1;
-        mpz_sub(temp_sub, r2, r1);      // (r2 - r1)
-        mpz_fdiv_q(q1, temp_sub, r1);   //q1 = (temp_sub)/r1;
-        mpz_mul(temp_mul, q1, t1);      // (q1*t1)
-        mpz_sub(t, t2, temp_mul);       // t = t2 - (temp_mul);
+        // Quociente: q1 = r2 / r1
+        mpz_fdiv_q(q1, r2, r1);
 
-        mpz_set(t2, t1); // t1 = t2
-        mpz_set(t1, t);  // t1 = t
-        mpz_set(r2, r1); // r2 = r1
-        mpz_set(r1, ri); // r1 = ri
+        // Atualizar r_i: ri = r2 % r1
+        mpz_mod(ri, r2, r1);
+
+        // Atualizar t: t = t2 - q1 * t1
+        mpz_mul(t, q1, t1);  // t = q1 * t1
+        mpz_sub(t, t2, t);   // t = t2 - t
+
+        // Deslocar as variáveis para a próxima iteração
+        mpz_set(r2, r1);  // r2 = r1
+        mpz_set(r1, ri);  // r1 = ri
+        mpz_set(t2, t1);  // t2 = t1
+        mpz_set(t1, t);   // t1 = t
 
     } while (mpz_cmp_ui(ri, 0)); // r1 > 0
 
@@ -49,6 +56,7 @@ void eea(mpz_t gcd, mpz_t inv, mpz_t r1, mpz_t r0){ // r1 < r2
     mpz_set(inv, t2);
 
     mpz_clear(r2);
+    mpz_clear(r1);
     mpz_clear(ri);
     mpz_clear(q1);
     mpz_clear(t2);
@@ -77,8 +85,6 @@ void prime(mpz_t number, int nbits) {
 int main(int argc, char const *argv[])
 {
     // 512, 1024, 2048
-    // gerar números aleatórios p e q até encontrar primos
-
     int nbits = 512;
 
     // 1. ESCOLHER PRIMOS GRANDES p, q
@@ -89,15 +95,15 @@ int main(int argc, char const *argv[])
     prime(p, nbits/2);
     prime(q, nbits/2);
 
-    gmp_printf("%Zd\n%Zd\n", p, q);
+    // gmp_printf("p:\n%Zd\nq:\n%Zd\n\n", p, q);
 
     // 2. CALCULAR n
     mpz_t n;
     mpz_init(n);
     mpz_mul(n, p, q);
-    gmp_printf("%Zd\n", n);
+    // gmp_printf("n:\n%Zd\n\n", n);
 
-    printf("num de bits da chave: %d\n", mpz_sizeinbase(n, 2));
+    // printf("num de bits da chave: %d\n\n", mpz_sizeinbase(n, 2));
 
     // 3. CALCULAR phi(n) = (p-1)*(q-1) 
     mpz_t phi;
@@ -106,7 +112,7 @@ int main(int argc, char const *argv[])
     mpz_sub_ui(q, q, 1);
     mpz_mul(phi, p, q);
 
-    gmp_printf("phi(n): %Zd\n", phi);
+    // gmp_printf("phi(n):\n%Zd\n\n", phi);
 
     // 4-5. SELECIONAR O EXPOENTE PÚBLICO e em {2,..., phi(n)-1}
     mpz_t gcd, inv, e;
@@ -119,16 +125,15 @@ int main(int argc, char const *argv[])
     gmp_randseed_ui(state, time(NULL)^rand());
 
     do {
-        mpz_urandomm(e, state, phi);  // gera de 0 a phi-1...
+        do {
+            mpz_urandomm(e, state, phi);  // gera de 0 a phi-1...
+        }while(mpz_cmp_ui(e, 1) <= 0);
         eea(gcd, inv, e, phi);
-    } while(gcd != 1);
+    } while(mpz_cmp_ui(gcd, 1) != 0);
 
     gmp_randclear(state);
 
-    gmp_printf("e: %Zd * %Zd = %Zd mod %Zd\n", e, inv, gcd, phi);
-
-
-    // 
+    // gmp_printf("e:\n%Zd\ninv:\n%Zd\nmdc:\n%Zd\n\n", e, inv, gcd);
 
 
     // LIBERANDO MEMÓRIA
