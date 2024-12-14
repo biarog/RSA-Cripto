@@ -3,6 +3,25 @@
 #include <time.h>
 #include <stdlib.h>
 
+typedef struct key {
+    mpz_t mod;
+    mpz_t exponent;
+} T_key;
+
+void key_init(T_key key){
+    mpz_init(key.mod);
+    mpz_init(key.exponent);
+}
+
+void key_clear(T_key key){
+    mpz_clear(key.mod);
+    mpz_clear(key.exponent);
+}
+
+void key_print(T_key key){
+    gmp_printf("Expoente:\n%Zd\n\nModulo:\n%Zd\n\n", key.exponent, key.mod);
+}
+
 void eea(mpz_t gcd, mpz_t inv, mpz_t e, mpz_t r0){ // r1 < r2
     mpz_t r2, r1, ri, // r2 = r_i-2, r1 = r_i-1, ri = r_i, r0
         q1, // q_i-1
@@ -82,11 +101,8 @@ void prime(mpz_t number, int nbits) {
     gmp_randclear(state);
 }
 
-int main(int argc, char const *argv[])
+int key_generator(int nbits, T_key kpub, T_key kpriv)
 {
-    // 512, 1024, 2048
-    int nbits = 512;
-
     // 1. ESCOLHER PRIMOS GRANDES p, q
     mpz_t p, q;
     mpz_init(p);
@@ -95,15 +111,9 @@ int main(int argc, char const *argv[])
     prime(p, nbits/2);
     prime(q, nbits/2);
 
-    // gmp_printf("p:\n%Zd\nq:\n%Zd\n\n", p, q);
-
     // 2. CALCULAR n
-    mpz_t n;
-    mpz_init(n);
-    mpz_mul(n, p, q);
-    // gmp_printf("n:\n%Zd\n\n", n);
-
-    // printf("num de bits da chave: %d\n\n", mpz_sizeinbase(n, 2));
+    mpz_mul(kpriv.mod, p, q);
+    mpz_set(kpub.mod, kpriv.mod);
 
     // 3. CALCULAR phi(n) = (p-1)*(q-1) 
     mpz_t phi;
@@ -111,14 +121,12 @@ int main(int argc, char const *argv[])
     mpz_sub_ui(p, p, 1);
     mpz_sub_ui(q, q, 1);
     mpz_mul(phi, p, q);
-
-    // gmp_printf("phi(n):\n%Zd\n\n", phi);
+    mpz_clear(p);
+    mpz_clear(q);
 
     // 4-5. SELECIONAR O EXPOENTE PÚBLICO e em {2,..., phi(n)-1}
-    mpz_t gcd, inv, e;
+    mpz_t gcd;
     mpz_init(gcd);
-    mpz_init(inv);
-    mpz_init(e);
 
     gmp_randstate_t state;
     gmp_randinit_default(state);
@@ -126,25 +134,32 @@ int main(int argc, char const *argv[])
 
     do {
         do {
-            mpz_urandomm(e, state, phi);  // gera de 0 a phi-1...
-        }while(mpz_cmp_ui(e, 1) <= 0);
-        eea(gcd, inv, e, phi);
+            mpz_urandomm(kpub.exponent, state, phi);  // gera de 0 a phi-1...
+        }while(mpz_cmp_ui(kpub.exponent, 1) <= 0);
+        eea(gcd, kpriv.exponent, kpub.exponent, phi);
     } while(mpz_cmp_ui(gcd, 1) != 0);
 
+    mpz_clear(gcd);
+    mpz_clear(phi);
     gmp_randclear(state);
 
-    // gmp_printf("e:\n%Zd\ninv:\n%Zd\nmdc:\n%Zd\n\n", e, inv, gcd);
+    return 0;
+}
 
 
-    // LIBERANDO MEMÓRIA
-    mpz_clear(p);
-    mpz_clear(q);
-    mpz_clear(n);
-    mpz_clear(phi);
-    mpz_clear(gcd);
-    mpz_clear(inv);
-    mpz_clear(e);
+int main(int argc, char const *argv[])
+{
+    // 512, 1024, 2048
+    T_key kpub, kpriv;
+    key_init(kpub);
+    key_init(kpriv);
 
+    key_generator(512, kpub, kpriv);
 
+    key_print(kpub);
+    key_print(kpriv);
+
+    key_clear(kpub);
+    key_clear(kpriv);
     return 0;
 }
