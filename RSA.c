@@ -8,18 +8,18 @@ typedef struct key {
     mpz_t exponent;
 } T_key;
 
-void key_init(T_key key){
-    mpz_init(key.mod);
-    mpz_init(key.exponent);
+void key_init(T_key *key){
+    mpz_init(key->mod);
+    mpz_init(key->exponent);
 }
 
-void key_clear(T_key key){
-    mpz_clear(key.mod);
-    mpz_clear(key.exponent);
+void key_clear(T_key *key){
+    mpz_clear(key->mod);
+    mpz_clear(key->exponent);
 }
 
-void key_print(T_key key){
-    gmp_printf("Expoente:\n%Zd\n\nModulo:\n%Zd\n\n", key.exponent, key.mod);
+void key_print(T_key *key){
+    gmp_printf("Expoente:\n%Zd\n\nModulo:\n%Zd\n\n", key->exponent, key->mod);
 }
 
 void eea(mpz_t gcd, mpz_t inv, mpz_t e, mpz_t r0){ // r1 < r2
@@ -138,15 +138,15 @@ int main(int argc, char const *argv[])
 {
     // 512, 1024, 2048
     T_key kpub, kpriv;
-    key_init(kpub);
-    key_init(kpriv);
+    key_init(&kpub);
+    key_init(&kpriv);
 
     key_generator(512, &kpub, &kpriv);
 
-    key_print(kpub);
-    key_print(kpriv);
+    key_print(&kpub);
+    key_print(&kpriv);
 
-    key_clear(kpub);
-    key_clear(kpriv);
+    key_clear(&kpub);
+    key_clear(&kpriv);
     return 0;
 }
