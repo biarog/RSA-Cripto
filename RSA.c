@@ -53,15 +53,37 @@ int main(int argc, char const *argv[])
 
     gmp_printf("phi(n): %Zd\n", phi);
 
-    // 4. SELECIONAR O EXPOENTE PÚBLICO e E {2,..., phi(n)-1}
+    // 4-5. SELECIONAR O EXPOENTE PÚBLICO e em {2,..., phi(n)-1}
+    mpz_t gcd, inv, e;
+    mpz_init(gcd);
+    mpz_init(inv);
+    mpz_init(e);
+
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
+    gmp_randseed_ui(state, time(NULL)^rand());
+
+    do {
+        mpz_urandomm(e, state, phi);  // gera de 0 a phi-1...
+        eea(gcd, inv, e, phi);
+    } while(gcd != 1);
+
+    gmp_randclear(state);
+
+    gmp_printf("e: %Zd * %Zd = %Zd mod %Zd\n", e, inv, gcd, phi);
 
 
-    // liberar memória
+    // 
+
+
+    // LIBERANDO MEMÓRIA
     mpz_clear(p);
     mpz_clear(q);
     mpz_clear(n);
     mpz_clear(phi);
-
+    mpz_clear(gcd);
+    mpz_clear(inv);
+    mpz_clear(e);
 
 
     return 0;
