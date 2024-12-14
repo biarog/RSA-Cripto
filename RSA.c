@@ -54,6 +54,8 @@ void eea(mpz_t gcd, mpz_t inv, mpz_t r1, mpz_t r0){ // r1 < r2
     mpz_clear(t2);
     mpz_clear(t1);
     mpz_clear(t);
+    mpz_clear(temp_sub);
+    mpz_clear(temp_mul);
 }
 
 void prime(mpz_t number, int nbits) {
